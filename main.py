@@ -21,8 +21,21 @@ def query_geoconnex(query_text: str):
         raise ValueError(f"Invalid JSON response from Geoconnex: {response.text}") from e
 
 @mcp.tool
+def geoconnex_shacl_shape() -> str:
+    """A SHACL shape that describes the structure of RDF data in the Geoconnex graph database. Not all data will conform to this shape, but it is a good general guideline of what data is available."""
+    url = "https://raw.githubusercontent.com/internetofwater/nabu/refs/heads/main/shacl_validator/shapes/geoconnex.ttl"
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.text    
+
+@mcp.tool
+def explore_geoconnex_db(sparql_query: Annotated[str, Field(description="A SPARQL query to run against the Geoconnex database that can be used to explore the database and discover what data is available")]) -> str:
+    """Search through the Geoconnex graph database and discover info about what data is available. The Geoconnex graph database is a RDF database of hydrological features in the United States."""
+    return query_geoconnex(sparql_query)
+
+@mcp.tool
 def get_geoconnex_pid_from_river_name(river_name: Annotated[str, Field(description="The name of the river")]) -> str:
-    """Given a river name, search the Geoconnex reference server for the associated persistent identifier (PID) and return it."""
+    """Given a river name, search the Geoconnex graph database for the associated persistent identifier (PID) and return it."""
     result = query_geoconnex(f"""
     PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
     PREFIX gsp: <http://www.opengis.net/ont/geosparql#>
